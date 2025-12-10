@@ -11,15 +11,14 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
-    "rootDir": "./",
-    "baseUrl": "./",
+    "rootDir": "./src",
+    "baseUrl": "./src",
     "paths": {
-      "@src/*": ["src/*"]
+      "@src/*": ["./*"]
     }
   },
   "include": [
-    "src/**/*",
-    "scripts/**/*"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
@@ -29,6 +28,7 @@
     "config.ts",
     "eslint.config.ts",
     "vitest.config.ts",
+    "scripts",
     "Projet_Automatisation _API/**"
   ]
 }

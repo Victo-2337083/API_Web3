@@ -1,3 +1,4 @@
+import 'module-alias/register'; 
 import 'dotenv/config'; 
 import logger from 'jet-logger';
 

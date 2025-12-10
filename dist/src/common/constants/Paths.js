@@ -18,24 +18,6 @@ exports.default = {
         Base: '/services',
         GetByService: '/:nomservice',
     },
-    // ---  Bons de Commande ---
-    BonsDeCommande: {
-        Base: '/bonsdecommande',
-        Get: '/',
-        GetByNumber: '/:numero',
-        Add: '/',
-        Update: '/',
-        GetByStatut: '/statut/:statut',
-    },
-    // ---  Fournisseurs ---
-    Fournisseurs: {
-        Base: '/fournisseurs',
-        Get: '/',
-        GetByName: '/:nom',
-        Add: '/',
-        Update: '/',
-        GetByCategorie: '/categorie/:categorie',
-    },
     // --- Utilisateurs ---
     Utilisateurs: {
         Base: '/utilisateurs',

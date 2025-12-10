@@ -34,13 +34,17 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const jet_env_1 = __importStar(require("jet-env"));
-const jet_validators_1 = require("jet-validators");
 const _1 = require(".");
 /******************************************************************************
-                                 Setup
+                                Setup
 ******************************************************************************/
 const ENV = (0, jet_env_1.default)({
-    NodeEnv: (0, jet_validators_1.isEnumVal)(_1.NodeEnvs),
+    NodeEnv: (val) => {
+        if (!Object.values(_1.NodeEnvs).includes(val)) {
+            throw new Error(`Invalid NodeEnv: ${val}. Must be one of: ${Object.values(_1.NodeEnvs).join(', ')}`);
+        }
+        return val;
+    },
     Port: jet_env_1.num,
     Mongodb: jet_env_1.str,
     Jwtsecret: jet_env_1.str,

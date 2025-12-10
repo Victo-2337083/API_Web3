@@ -1,14 +1,17 @@
 import jetEnv, { num, str } from 'jet-env';
-import { isEnumVal } from 'jet-validators';
-
 import { NodeEnvs } from '.';
 
 /******************************************************************************
-                                 Setup
+                                Setup
 ******************************************************************************/
 
 const ENV = jetEnv({
-  NodeEnv: isEnumVal(NodeEnvs),
+  NodeEnv: (val: string) => {
+    if (!Object.values(NodeEnvs).includes(val as NodeEnvs)) {
+      throw new Error(`Invalid NodeEnv: ${val}. Must be one of: ${Object.values(NodeEnvs).join(', ')}`);
+    }
+    return val as NodeEnvs;
+  },
   Port: num,
   Mongodb: str,
   Jwtsecret: str,

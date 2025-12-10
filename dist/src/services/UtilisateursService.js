@@ -22,20 +22,17 @@ async function getAll() {
         return utilisateurs;
     }
     catch (err) {
-        console.error("[Service][getAll] Erreur :", err);
-        throw new Error(err.message || "Impossible de récupérer les utilisateurs.");
+        console.error('[Service][getAll] Erreur :', err);
+        throw new Error(err.message || 'Impossible de récupérer les utilisateurs.');
     }
 }
 /**
  * Lire un utilisateur par son email
  */
 async function getOne(email) {
-    if (!email || email.trim() === "") {
+    if (!email || email.trim() === '') {
         throw new Error(exports.INVALID_DATA_ERR + " : l'email est requis");
     }
-    // Logique d'authentification (si besoin) à ignorer ici
-    // Le hachage du mot de passe doit être fait avant l'ajout/mise à jour, 
-    // mais la fonction getOne n'a pas besoin de ce traitement.
     try {
         const utilisateur = await UtilisateursRepo_1.default.getOne(email);
         if (!utilisateur) {
@@ -55,17 +52,15 @@ async function getOne(email) {
  * Ajouter un utilisateur
  */
 async function addOne(utilisateur) {
-    if (!utilisateur || !utilisateur.email || !utilisateur.motDePasse) {
+    if (!utilisateur?.email || !utilisateur.motDePasse) {
         throw new Error(exports.INVALID_DATA_ERR + " : l'email et le mot de passe sont requis");
     }
-    // NOTE IMPORTANTE: Le HACHAGE du mot de passe DOIT se faire ici ou dans un middleware Mongoose.
-    // Pour la progression, on considère qu'il est géré par Mongoose.
     try {
         const created = await UtilisateursRepo_1.default.add(utilisateur);
         return created;
     }
     catch (err) {
-        console.error("[Service][addOne] Erreur :", err);
+        console.error('[Service][addOne] Erreur :', err);
         throw new Error(err.message || "Impossible d'ajouter l'utilisateur.");
     }
 }
@@ -73,12 +68,10 @@ async function addOne(utilisateur) {
  * Mettre à jour un utilisateur
  */
 async function updateOne(utilisateur) {
-    if (!utilisateur || !utilisateur.email) {
+    if (!utilisateur?.email) {
         throw new Error(exports.INVALID_DATA_ERR + " : l'email de l'utilisateur est requis pour la mise à jour");
     }
-    // Hachage du nouveau mot de passe (si fourni) :
-    // Si (utilisateur.motDePasse) { Hacher le mot de passe } 
-    // ... (Logique complexe d'authentification à implémenter)
+    // Hachage du nouveau mot de passe  s'il est fourni
     try {
         const updated = await UtilisateursRepo_1.default.update(utilisateur);
         if (!updated) {
@@ -88,7 +81,7 @@ async function updateOne(utilisateur) {
     }
     catch (err) {
         console.error(`[Service][updateOne] Erreur pour l'email ${utilisateur.email}:`, err);
-        if (err.message.includes("Utilisateur non trouvé") || err.message.includes(exports.UTILISATEUR_NOT_FOUND_ERR)) {
+        if (err.message.includes('Utilisateur non trouvé') || err.message.includes(exports.UTILISATEUR_NOT_FOUND_ERR)) {
             throw new Error(exports.UTILISATEUR_NOT_FOUND_ERR);
         }
         throw new Error(err.message || "Impossible de mettre à jour l'utilisateur.");
@@ -98,8 +91,8 @@ async function updateOne(utilisateur) {
  * Extraire tous les utilisateurs par rôle
  */
 async function getByRole(role) {
-    if (!role || role.trim() === "") {
-        throw new Error(exports.INVALID_DATA_ERR + " : le rôle est requis");
+    if (!role || role.trim() === '') {
+        throw new Error(exports.INVALID_DATA_ERR + ' : le rôle est requis');
     }
     try {
         const utilisateurs = await UtilisateursRepo_1.default.getByRole(role);
@@ -107,7 +100,7 @@ async function getByRole(role) {
     }
     catch (err) {
         console.error(`[Service][getByRole] Erreur pour le rôle ${role}:`, err);
-        throw new Error(err.message || "Impossible de récupérer les utilisateurs pour ce rôle.");
+        throw new Error(err.message || 'Impossible de récupérer les utilisateurs pour ce rôle.');
     }
 }
 /******************************************************************************/

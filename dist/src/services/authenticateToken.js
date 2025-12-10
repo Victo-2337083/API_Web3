@@ -12,27 +12,34 @@ const Paths_1 = __importDefault(require("@src/common/constants/Paths"));
  *
  * @param {Request} req - La requête au serveur
  * @param {Response} res - La réponse du serveur
- * @param {NextFunction} next - La fonction a appeler pour continuer le processus.
+ * @param {NextFunction} next - La fonction à appeler pour continuer le processus.
  */
 function authenticateToken(req, res, next) {
-    // Puisque l'intergiciel est monté sur Paths.Base (/api), req.url est le chemin interne.
     const urlWithoutBase = req.url;
-    const tokenPath = Paths_1.default.GenerateToken.Base; // Ex: /generatetoken
-    // Exclure la route de génération de jeton
-    if (urlWithoutBase.startsWith(tokenPath)) {
+    const tokenPath = Paths_1.default.GenerateToken.Base;
+    const swaggerPath = '/api-docs';
+    // Exclure la route de génération de jeton et documentation
+    if (urlWithoutBase.startsWith(tokenPath) || urlWithoutBase.startsWith(swaggerPath)) {
         next();
         return;
     }
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    const token = authHeader?.split(' ')[1];
     console.log('Token reçu:', token);
-    if (token == null)
+    if (!token) {
         return res.sendStatus(HttpStatusCodes_1.default.UNAUTHORIZED);
-    // CORRECTION : Utiliser ENV.Jwtsecret pour la vérification
+    }
     jsonwebtoken_1.default.verify(token, ENV_1.default.Jwtsecret, (err, user) => {
-        console.log('Erreur de vérification JWT:', err);
-        if (err)
+        if (err) {
+            console.error('Erreur de vérification JWT:', err);
+            if (err.name === 'TokenExpiredError') {
+                return res
+                    .status(HttpStatusCodes_1.default.FORBIDDEN)
+                    .json({ message: 'Token expiré, veuillez vous reconnecter.' });
+            }
             return res.sendStatus(HttpStatusCodes_1.default.FORBIDDEN);
+        }
+        req.user = user;
         next();
     });
 }

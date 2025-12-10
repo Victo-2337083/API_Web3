@@ -1,0 +1,32 @@
+[
+  {
+    "_id": { "$oid": "653b6f12d8a5c9a1e0f0f0f0" },
+    "id": "A001",
+    "nom": "Dupont",
+    "prenom": "Alice",
+    "email": "alice.dupont@entreprise.com",
+    "motDePasse": "motdepasse_hashé_admin", 
+    "role": "Admin",
+    "statut": "Actif"
+  },
+  {
+    "_id": { "$oid": "653b6f12d8a5c9a1e0f0f0f1" },
+    "id": "C001",
+    "nom": "Bernard",
+    "prenom": "Charles",
+    "email": "charles.bernard@entreprise.com",
+    "motDePasse": "motdepasse_hashé_compta",
+    "role": "Comptable",
+    "statut": "Actif"
+  },
+  {
+    "_id": { "$oid": "653b6f12d8a5c9a1e0f0f0f2" },
+    "id": "E001",
+    "nom": "David",
+    "prenom": "Emma",
+    "email": "emma.david@entreprise.com",
+    "motDePasse": "motdepasse_hashé_employé",
+    "role": "Employé",
+    "statut": "Actif"
+  }
+]

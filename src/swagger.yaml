@@ -1,0 +1,649 @@
+openapi: 3.0.0
+info:
+  title: API de Gestion des Factures et Utilisateurs
+  version: 1.0.0
+  description: API RESTful pour la gestion des factures, des utilisateurs, et l'authentification.
+servers:
+  - url: /api
+    description: Chemin de base de l'API
+tags:
+  - name: Authentification
+    description: Opérations liées à la génération de jetons JWT.
+  - name: Utilisateurs
+    description: Gestion complète des utilisateurs (CRUD et recherche par rôle).
+  - name: Factures
+    description: Gestion complète des factures (CRUD et recherche par article/service).
+
+# --- Sécurité Globale (Applicable à toutes les routes sauf générer le jeton) ---
+security:
+  - bearerAuth: []
+
+paths:
+# ==============================================================================
+#                               AUTHENTIFICATION (/generatetoken)
+# ==============================================================================
+  /generatetoken:
+    post:
+      tags:
+        - Authentification
+      summary: Générer un jeton JWT
+      description: Authentifie un utilisateur (email et mot de passe) et retourne un jeton JWT valide pour 24 heures.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userLogin
+              properties:
+                userLogin:
+                  $ref: '#/components/schemas/IUtilisateurLogin'
+      responses:
+        '200':
+          description: Jeton JWT généré avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: Le jeton JWT à utiliser pour les requêtes authentifiées.
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '401':
+          description: Email ou mot de passe invalide.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Email ou mot de passe invalide.
+
+# ==============================================================================
+#                               UTILISATEURS (/utilisateurs)
+# ==============================================================================
+  /utilisateurs:
+    get:
+      tags:
+        - Utilisateurs
+      summary: Liste de tous les utilisateurs
+      description: Récupère une liste de tous les utilisateurs. Nécessite un jeton d'authentification.
+      responses:
+        '200':
+          description: Liste des utilisateurs récupérée avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  count:
+                    type: integer
+                    example: 7
+                  utilisateurs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/IUtilisateurResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags:
+        - Utilisateurs
+      summary: Créer un nouvel utilisateur
+      description: Ajoute un nouvel utilisateur au système. Nécessite un jeton d'authentification.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IUtilisateurRequest'
+      responses:
+        '201':
+          description: Utilisateur créé avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  utilisateur:
+                    $ref: '#/components/schemas/IUtilisateurResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    put:
+      tags:
+        - Utilisateurs
+      summary: Mettre à jour un utilisateur
+      description: Met à jour les informations d'un utilisateur existant (identifié par l'email dans le corps). Nécessite un jeton d'authentification.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IUtilisateurRequest'
+      responses:
+        '200':
+          description: Utilisateur mis à jour avec succès.
+        '404':
+          description: Utilisateur non trouvé.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Utilisateur non trouvé
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /utilisateurs/{email}:
+    get:
+      tags:
+        - Utilisateurs
+      summary: Récupérer un utilisateur par email
+      description: Récupère les détails d'un utilisateur spécifique en utilisant son email. Nécessite un jeton d'authentification.
+      parameters:
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+            format: email
+          description: L'email de l'utilisateur à récupérer.
+          example: alice.dupont@entreprise.com
+      responses:
+        '200':
+          description: Utilisateur trouvé.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  utilisateur:
+                    $ref: '#/components/schemas/IUtilisateurResponse'
+        '404':
+          description: Utilisateur non trouvé.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Utilisateur non trouvé
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+
+  /utilisateurs/role/{role}:
+    get:
+      tags:
+        - Utilisateurs
+      summary: Liste d'utilisateurs par rôle
+      description: Récupère la liste des utilisateurs ayant un rôle spécifique. Nécessite un jeton d'authentification.
+      parameters:
+        - name: role
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [Administrateur, Employé]
+          description: Le rôle des utilisateurs à rechercher.
+          example: Administrateur
+      responses:
+        '200':
+          description: Liste des utilisateurs récupérée avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  count:
+                    type: integer
+                    example: 3
+                  utilisateurs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/IUtilisateurResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+
+# ==============================================================================
+#                               FACTURES (/factures)
+# ==============================================================================
+  /factures:
+    get:
+      tags:
+        - Factures
+      summary: Liste de toutes les factures
+      description: Récupère toutes les factures enregistrées. Nécessite un jeton d'authentification.
+      responses:
+        '200':
+          description: Liste des factures récupérée avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  count:
+                    type: integer
+                    example: 10
+                  factures:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/IFactureResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags:
+        - Factures
+      summary: Créer une nouvelle facture
+      description: Ajoute une nouvelle facture au système. Nécessite un jeton d'authentification. Les montants HT, TVA et TTC sont calculés automatiquement.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IFactureRequest'
+      responses:
+        '201':
+          description: Facture créée avec succès.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  facture:
+                    $ref: '#/components/schemas/IFactureResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    put:
+      tags:
+        - Factures
+      summary: Mettre à jour une facture
+      description: Met à jour une facture existante (identifiée par `numeroFacture` dans le corps). Nécessite un jeton d'authentification.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IFactureRequest'
+      responses:
+        '200':
+          description: Facture mise à jour avec succès.
+        '404':
+          description: Facture non trouvée.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Facture non trouvée
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /factures/{numero}:
+    get:
+      tags:
+        - Factures
+      summary: Récupérer une facture par numéro
+      description: Récupère les détails d'une facture spécifique en utilisant son numéro. Nécessite un jeton d'authentification.
+      parameters:
+        - name: numero
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1000
+            maximum: 999999
+          description: Le numéro unique de la facture.
+          example: 100015
+      responses:
+        '200':
+          description: Facture trouvée.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  facture:
+                    $ref: '#/components/schemas/IFactureResponse'
+        '404':
+          description: Facture non trouvée.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Facture non trouvée
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+
+# ==============================================================================
+#                               SERVICES (/services)
+# ==============================================================================
+  /services/{nomservice}:
+    get:
+      tags:
+        - Factures
+      summary: Rechercher des factures par article/service
+      description: Récupère toutes les factures qui contiennent un article avec description spécifique. Nécessite un jeton d'authentification.
+      parameters:
+        - name: nomservice
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Description de l'article à rechercher (doit être encodé dans l'URL, ex: `Table%20de%20bureau%20ergonomique`).
+          example: Table de bureau ergonomique
+      responses:
+        '200':
+          description: Liste des factures contenant cet article.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  count:
+                    type: integer
+                    example: 1
+                  factures:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/IFactureResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+
+# ==============================================================================
+#                               COMPONENTS (SCHEMAS & RESPONSES)
+# ==============================================================================
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Entrez votre jeton JWT après le mot-clé **Bearer**.
+
+  responses:
+    UnauthorizedError:
+      description: Accès non autorisé ou jeton manquant/invalide.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Jeton invalide ou non fourni.
+    BadRequestError:
+      description: Requête invalide (données manquantes ou format incorrect).
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Les données fournies sont invalides : l'email est requis
+    InternalError:
+      description: Erreur interne du serveur.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Erreur lors de la récupération des factures.
+
+  schemas:
+# --- Authentification ---
+    IUtilisateurLogin:
+      type: object
+      required:
+        - email
+        - motDePasse
+      properties:
+        email:
+          type: string
+          format: email
+          example: alice.dupont@entreprise.com
+        motDePasse:
+          type: string
+          description: Le mot de passe de l'utilisateur.
+          example: motdepasse_hashé_admin
+
+# --- Utilisateur ---
+    IUtilisateurBase:
+      type: object
+      properties:
+        nom:
+          type: string
+          example: Dupont
+        prenom:
+          type: string
+          example: Alice
+        email:
+          type: string
+          format: email
+          description: L'email est l'identifiant unique.
+          example: alice.dupont@entreprise.com
+        role:
+          type: string
+          enum: [Administrateur, Employé]
+          default: Employé
+          example: Administrateur
+        telephone:
+          type: string
+          nullable: true
+          example: 514-555-0101
+        statut:
+          type: string
+          enum: [Actif, Inactif]
+          default: Actif
+          example: Actif
+
+    IUtilisateurRequest:
+      allOf:
+        - $ref: '#/components/schemas/IUtilisateurBase'
+        - type: object
+          required:
+            - nom
+            - prenom
+            - email
+            - motDePasse
+          properties:
+            motDePasse:
+              type: string
+              description: Requis uniquement lors de l'ajout ou du changement de mot de passe.
+              writeOnly: true
+              example: password123
+
+    IUtilisateurResponse:
+      allOf:
+        - $ref: '#/components/schemas/IUtilisateurBase'
+        - type: object
+          properties:
+            _id:
+              type: string
+              description: ID unique MongoDB.
+              example: 653b6f12d8a5c9a1e0f0f4a1
+            derniereConnexion:
+              type: string
+              format: date-time
+              nullable: true
+
+# --- Facture  ---
+    Article:
+      type: object
+      required:
+        - description
+        - quantite
+        - prixUnitaire
+        - tauxTVA
+      properties:
+        description:
+          type: string
+          example: Table de bureau ergonomique
+        quantite:
+          type: integer
+          minimum: 1
+          example: 3
+        prixUnitaire:
+          type: number
+          format: float
+          minimum: 0
+          example: 500
+        tauxTVA:
+          type: number
+          format: float
+          minimum: 0
+          example: 15
+        totalLigne:
+          type: number
+          format: float
+          description: Calculé par le serveur.
+          readOnly: true
+          example: 1725
+
+# --- Facture ---
+    IFactureBase:
+      type: object
+      required:
+        - numeroFacture
+        - dateFacture
+        - dateEcheance
+        - fournisseurId
+        - utilisateurId
+        - devise
+        - statut
+        - modePaiement
+        - articles
+      properties:
+        numeroFacture:
+          type: integer
+          minimum: 1000
+          maximum: 999999
+          example: 100015
+        dateFacture:
+          type: string
+          format: date
+          example: 2025-11-30
+        dateEcheance:
+          type: string
+          format: date
+          example: 2025-12-30
+        fournisseurId:
+          type: string
+          description: ID MongoDB du fournisseur.
+          example: 652b981ca6add4a11665f782
+        utilisateurId:
+          type: string
+          description: ID MongoDB de l'utilisateur associé.
+          example: 653b6f12d8a5c9a1e0f0f4a1
+        montantHT:
+          type: number
+          format: float
+          description: Montant total HT (calculé par le serveur).
+          readOnly: true
+          example: 1500
+        montantTVA:
+          type: number
+          format: float
+          description: Montant total TVA (calculé par le serveur).
+          readOnly: true
+          example: 225
+        montantTTC:
+          type: number
+          format: float
+          description: Montant total TTC (calculé par le serveur).
+          readOnly: true
+          example: 1725
+        devise:
+          type: string
+          example: CAD
+        statut:
+          type: string
+          enum: [En attente, Payée, Annulée]
+          example: Payée
+        modePaiement:
+          type: string
+          example: Chèque
+        articles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Article'
+        notes:
+          type: string
+          nullable: true
+          maxLength: 500
+          example: Facture réglée par virement.
+
+    IFactureRequest:
+      allOf:
+        - $ref: '#/components/schemas/IFactureBase'
+        - type: object
+          properties:
+            articles:
+              type: array
+              description: Les champs montantHT, montantTVA et montantTTC seront recalculés par le serveur.
+              items:
+                $ref: '#/components/schemas/Article'
+
+    IFactureResponse:
+      allOf:
+        - $ref: '#/components/schemas/IFactureBase'
+        - type: object
+          properties:
+            _id:
+              type: string
+              description: ID unique MongoDB.
+              example: 692b981ca6add4a11665f782
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time

@@ -1,0 +1,22 @@
+[
+  {
+    "numeroFacture": 2025010,
+    "dateFacture": "2025-02-01T00:00:00.000Z",
+    "fournisseurId": { "$oid": "653b6f12d8a5c9a1e0f0f1f1" },
+    "utilisateurId": { "$oid": "653b6f12d8a5c9a1e0f0f0f1" },
+    "statut": "Payée",
+    "montantTotalHT": 1500.00,
+    "montantTVA": 225.00,
+    "montantTotalTTC": 1725.00,
+    "devise": "CAD",
+    "articles": [
+      {
+        "description": "Table de bureau ergonomique",
+        "quantite": 3,
+        "prixUnitaire": 500.00,
+        "totalLigneHT": 1500.00
+      }
+    ],
+    "conditionsPaiement": "30 jours"
+  }
+]

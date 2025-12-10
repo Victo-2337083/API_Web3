@@ -1,0 +1,136 @@
+import { IUtilisateur, Utilisateur } from '@src/models/Utilisateur';
+import mongoose from 'mongoose';
+
+// **** Functions **** //
+
+/**
+ * Extraire tous les utilisateurs
+ */
+async function getAll(): Promise<IUtilisateur[]> {
+  try {
+    const utilisateurs = await Utilisateur.find().select('-motDePasse'); 
+    return utilisateurs;
+  } catch (err) {
+    console.error('[Repo][getAll] Erreur :', err);
+    throw new Error('Erreur lors de la récupération de tous les utilisateurs.');
+  }
+}
+
+/**
+ * Extraire un utilisateur par son email
+ */
+async function getOne(email: string): Promise<IUtilisateur | null> {
+  try {
+    // Recherche basée sur l'email
+    const utilisateur = await Utilisateur.findOne({ email: email }).select('-motDePasse');
+    return utilisateur;
+  } catch (err) {
+    console.error(`[Repo][getOne] Erreur avec email ${email}:`, err);
+    throw new Error("Erreur lors de la récupération de l'utilisateur.");
+  }
+}
+
+/**
+ * Extraire un utilisateur AVEC mot de passe (pour l'authentification)
+ */
+async function getOneWithPassword(email: string): Promise<IUtilisateur | null> {
+  try {
+    // Recherche basée sur l'email, y compris le mot de passe
+    const utilisateur = await Utilisateur.findOne({ email: email });
+    return utilisateur;
+  } catch (err) {
+    console.error(`[Repo][getOneWithPassword] Erreur avec email ${email}:`, err);
+    throw new Error("Erreur lors de la récupération de l'utilisateur pour l'authentification.");
+  }
+}
+
+/**
+ * Ajouter un utilisateur
+ */
+
+async function add(utilisateur: IUtilisateur): Promise<IUtilisateur> {
+  if (!utilisateur?.email || !utilisateur.motDePasse) {
+    throw new Error("Les données de l'utilisateur sont invalides : l'email et le mot de passe sont obligatoires.");
+  }
+  try {
+    const nouvelUtilisateur = new Utilisateur(utilisateur);
+   
+    const saved = await nouvelUtilisateur.save();
+
+  
+    const savedObject: Record<string, any> = saved.toObject(); 
+
+   
+    delete savedObject.motDePasse; 
+
+   
+    return savedObject as IUtilisateur;
+  }catch (err) {
+  if (err instanceof Error) {
+    throw new Error(err.message);
+  }
+
+  throw new Error("Impossible de mettre à jour l'utilisateur.");
+}
+}
+
+/**
+ * Vérifier si un utilisateur existe par email
+ */
+async function persists(email: string): Promise<boolean> {
+  return (await Utilisateur.findOne({ email })) !== null;
+}
+
+/**
+ * Mettre à jour un utilisateur par son email
+ */
+async function update(utilisateur: IUtilisateur): Promise<IUtilisateur | null> {
+  if (!utilisateur?.email) {
+    throw new Error("L'email de l'utilisateur est obligatoire pour la mise à jour.");
+  }
+  
+  
+  try {
+    const updated = await Utilisateur.findOneAndUpdate(
+      { email: utilisateur.email }, 
+      { $set: utilisateur }, 
+      { new: true, runValidators: true },
+    ).select('-motDePasse'); 
+
+    if (!updated) {
+      throw new Error('Utilisateur non trouvé avec cet email.');
+    }
+
+    return updated;
+  }catch (err) {
+  if (err instanceof Error) {
+    throw new Error(err.message);
+  }
+
+  throw new Error("Impossible de mettre à jour l'utilisateur.");
+}
+}
+
+/**
+ * Extraire tous les utilisateurs par rôle
+ */
+async function getByRole(role: string): Promise<IUtilisateur[]> {
+  try {
+    const utilisateurs = await Utilisateur.find({ role: role }).select('-motDePasse');
+    return utilisateurs;
+  } catch (err) {
+    console.error(`[Repo][getByRole] Erreur avec rôle ${role}:`, err);
+    throw new Error('Erreur lors de la récupération des utilisateurs par rôle.');
+  }
+}
+
+//**** Export default ****//
+export default {
+  persists,
+  getAll,
+  getOne,
+  getOneWithPassword, 
+  add,
+  update,
+  getByRole,
+} as const;

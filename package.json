@@ -2,7 +2,8 @@
   "name": "facture",
   "version": "0.0.0",
   "scripts": {
-     "build": "tsc && tsc-alias",
+    "build": "tsc && tsc-alias && npm run copy-assets",
+    "copy-assets": "copyfiles -u 1 \"src/**/*.yaml\" \"src/**/*.json\" dist",
     "clean-install": "rm -rf ./node_modules && rm -r package-lock.json && npm i",
     "dev": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register ./src/index.ts",
     "dev:hot": "nodemon --exec \"npm run dev\" --watch ./src --ext .ts",
@@ -54,6 +55,7 @@
     "@types/yamljs": "^0.2.34",
     "@typescript-eslint/eslint-plugin": "6.21.0",
     "@typescript-eslint/parser": "6.21.0",
+    "copyfiles": "^2.4.1",
     "cross-env": "^10.1.0",
     "eslint": "^8.57.0",
     "eslint-plugin-n": "^17.23.1",
